@@ -22,6 +22,12 @@
 
 - https://circuitdigest.com/tutorial/image-manipulation-in-python-opencv-part1
 
-
 Esse ultimo link mostra como manipular uma imagem com opencv
 
+---
+
+### Comunicação com a Serial:
+- https://github.com/jacklinquan/usbserial4a
+
+### indentificador do arduino usado em conjunto do link acima:
+- https://stackoverflow.com/questions/19965209/use-the-device-filter-xml-resource-file-to-filter-usb-enumeration-results#19966328

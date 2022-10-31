@@ -37,7 +37,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,opencv,numpy
+requirements = python3,kivy,opencv,numpy, usb4a, usbserial4a
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -161,6 +161,7 @@ android.permissions = CAMERA
 
 # (list) Pattern to whitelist for the whole project
 #android.whitelist =
+android.p4a_whitelist = lib-dynload/termios.so
 
 # (str) Path to a custom whitelist file
 #android.whitelist_src =
@@ -223,7 +224,7 @@ android.permissions = CAMERA
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
-#android.manifest.intent_filters =
+android.manifest.intent_filters = intent-filter.xml
 
 # (str) launchMode to set for the main activity
 #android.manifest.launch_mode = standard
