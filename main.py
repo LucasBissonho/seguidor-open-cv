@@ -14,16 +14,19 @@ throw an exception during the kv language processing.
 # import logging
 # Logger.setLevel(logging.TRACE)
 
+# from select import selectNov 3 9:00 PM
+from traceback import print_tb
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.camera import Camera
-from kivy.uix.image import Image
-
 import cv2 as cv
-
+import numpy as np
+from PIL import Image
 from usb4a import usb
+
 from usbserial4a import serial4a
+
 
 Builder.load_string(
     """
@@ -48,9 +51,46 @@ Builder.load_string(
 
 
 class CameraClick(BoxLayout):
-    def capture(self):
-        usb_device_list = usb.get_usb_device_list()
+    change = True
 
+    def capture(self):
+        # referencia da camera
+        camera: Camera = self.ids["camera"]
+
+        # convertendo buffer de bytes para imagem pil
+        pil_image = Image.frombytes(
+            mode="RGBA", size=camera.texture.size, data=camera.texture.pixels
+        )
+
+        # convertando para um formato usado pelo opencv
+        npimg = np.array(pil_image)
+        # ocvim = cv.cvtColor(npimg, cv.COLOR_RGB2BGR)
+        ocvim = cv.cvtColor(npimg, cv.COLOR_BGR2GRAY)
+
+        # pegando apenas a linha central da imagem
+        height, width = ocvim.shape[:2]
+        start_row, start_col = int(height * 0.5), 0
+        end_row, end_col = int(height * 0.55), width
+        cropped = ocvim[start_row:end_row, start_col:end_col]
+
+        # dividir a imagem em 5 pedaços
+        end_wdh_1 = int(width / 3)
+        pedaco_1 = ocvim[start_row:end_row, 0:end_wdh_1]
+        start_wdh_2 = end_wdh_1 + 1
+        end_wdh_2 = int(width * 2 / 3)
+        pedaco_2 = ocvim[start_row:end_row, start_wdh_2:end_wdh_2]
+        start_wdh_3 = end_wdh_2 + 1
+        pedaco_3 = ocvim[start_row:end_row, start_wdh_3:width]
+
+        # verificando a media dos pixels da imagem
+        # white = 1, black = 0
+        result_1 = 1 if int(np.mean(pedaco_1)) >= 128 else 0
+        result_2 = 1 if int(np.mean(pedaco_2)) >= 128 else 0
+        result_3 = 1 if int(np.mean(pedaco_3)) >= 128 else 0
+        print(f"r1:{result_1}, r2: {result_2}, r3: {result_3}")
+
+        # preparando para enviar dados pela serial
+        usb_device_list = usb.get_usb_device_list()
         if usb_device_list:
             serial_port = serial4a.get_serial_port(
                 usb_device_list[0].getDeviceName(),
@@ -60,8 +100,13 @@ class CameraClick(BoxLayout):
                 1,
             )  # Number of stop bits(1, 1.5 or 2)
             if serial_port and serial_port.is_open:
-                serial_port.write(b"Hello world!")
-                # serial_port.close()
+                # serial_port.write(b"{}{}{}".format(result_1, result_2, result_3))
+                if self.change:
+                    serial_port.write(b"1")
+                else:
+                    serial_port.write(b"0")
+                self.change = not self.change
+        # serial_port.close()  # essa funcao esta quebrando o app
 
 
 class TestCamera(App):
