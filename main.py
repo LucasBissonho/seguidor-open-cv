@@ -78,8 +78,6 @@ class CameraClick(BoxLayout):
 
         return pil_image
 
-    # def rotate_img(img: Image)->Image:
-
     def handleImgOpenCV(self, image: Image) -> str:
         # convertendo buffer de bytes para imagem pil
 
@@ -90,27 +88,43 @@ class CameraClick(BoxLayout):
 
         # pegando apenas a linha central da imagem
         height, width = ocvim.shape[:2]
-        start_row, start_col = int(height * 0.5), 0
-        end_row, end_col = int(height * 0.55), width
-        cropped = ocvim[start_row:end_row, start_col:end_col]
+
+        # start_row, start_col = int(height * 0.5 - 50), 0
+        # end_row, end_col = int(height * 0.5 + 50), width
+
+        # dividir imagem em 3
+        # DIVISOES = 3
+        # end_w_1 = int(width / DIVISOES)
+        # pedaco_1 = ocvim[start_row:end_row, 0:end_w_1]
+        start_row, start_col = int(height * 0.5 - 50), 0
+        end_row, end_col = int(height * 0.5 + 50), width
+        # cropped = ocvim[start_row:end_row, start_col:end_col]
+        # cv.imwrite("inteira.png", ocvim)
 
         # dividir a imagem em 5 pedaços
         end_wdh_1 = int(width / 3)
         pedaco_1 = ocvim[start_row:end_row, 0:end_wdh_1]
+        # cv.imwrite("pedaco_1.png", pedaco_1)
+
         start_wdh_2 = end_wdh_1 + 1
         end_wdh_2 = int(width * 2 / 3)
         pedaco_2 = ocvim[start_row:end_row, start_wdh_2:end_wdh_2]
+        # cv.imwrite("pedaco_2.png", pedaco_2)
+
         start_wdh_3 = end_wdh_2 + 1
         pedaco_3 = ocvim[start_row:end_row, start_wdh_3:width]
+        # cv.imwrite("pedaco_3.png", pedaco_3)
 
         # verificando a media dos pixels da imagem
         # white = 1, black = 0
-        result_1 = 1 if int(np.mean(pedaco_1)) >= 128 else 0
-        result_2 = 1 if int(np.mean(pedaco_2)) >= 128 else 0
-        result_3 = 1 if int(np.mean(pedaco_3)) >= 128 else 0
+
+        LUMUS = 64
+        result_1 = 1 if int(np.mean(pedaco_1)) >= LUMUS else 0
+        result_2 = 1 if int(np.mean(pedaco_2)) >= LUMUS else 0
+        result_3 = 1 if int(np.mean(pedaco_3)) >= LUMUS else 0
 
         # return f"r1:{result_1}, r2: {result_2}, r3: {result_3}"
-        return f"{result_1}{result_2}{result_3}"
+        return f"{result_3}{result_2}{result_1}"
 
     def serialCommunication(self, data: str):
         # preparando para enviar dados pela serial
