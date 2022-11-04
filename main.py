@@ -25,8 +25,8 @@ import cv2 as cv
 import numpy as np
 from PIL import Image
 
-# from usb4a import usb
-# from usbserial4a import serial4a
+from usb4a import usb
+from usbserial4a import serial4a
 
 
 Builder.load_string(
@@ -37,6 +37,13 @@ Builder.load_string(
         id: camera
         resolution: (1280, 720)
         play: False
+        canvas.before:
+            PushMatrix
+            Rotate:
+                angle: -90
+                origin: self.center
+        canvas.after:
+            PopMatrix
     ToggleButton:
         text: 'Play'
         on_press: camera.play = not camera.play
@@ -58,6 +65,7 @@ class CameraClick(BoxLayout):
     def start(self, dt):
         image = self.capture()
         result = self.handleImgOpenCV(image)
+        self.serialCommunication(result)
         print(result)
 
     def capture(self) -> Image:
@@ -69,6 +77,8 @@ class CameraClick(BoxLayout):
         )
 
         return pil_image
+
+    # def rotate_img(img: Image)->Image:
 
     def handleImgOpenCV(self, image: Image) -> str:
         # convertendo buffer de bytes para imagem pil
@@ -99,29 +109,24 @@ class CameraClick(BoxLayout):
         result_2 = 1 if int(np.mean(pedaco_2)) >= 128 else 0
         result_3 = 1 if int(np.mean(pedaco_3)) >= 128 else 0
 
-        return f"r1:{result_1}, r2: {result_2}, r3: {result_3}"
+        # return f"r1:{result_1}, r2: {result_2}, r3: {result_3}"
+        return f"{result_1}{result_2}{result_3}"
 
-    def serialCommunication(self, data):
-        ...
+    def serialCommunication(self, data: str):
         # preparando para enviar dados pela serial
-        # usb_device_list = usb.get_usb_device_list()
-        # if usb_device_list:
-        #     serial_port = serial4a.get_serial_port(
-        #         usb_device_list[0].getDeviceName(),
-        #         9600,  # Baudrate
-        #         8,  # Number of data bits(5, 6, 7 or 8)
-        #         "N",  # Parity('N', 'E', 'O', 'M' or 'S')
-        #         1,
-        #     )  # Number of stop bits(1, 1.5 or 2)
-        #     if serial_port and serial_port.is_open:
-        #         # serial_port.write(b"{}{}{}".format(result_1, result_2, result_3))
-        #         self.teste(serial_port)
+        usb_device_list = usb.get_usb_device_list()
+        if usb_device_list:
+            serial_port = serial4a.get_serial_port(
+                usb_device_list[0].getDeviceName(),
+                9600,  # Baudrate
+                8,  # Number of data bits(5, 6, 7 or 8)
+                "N",  # Parity('N', 'E', 'O', 'M' or 'S')
+                1,
+            )  # Number of stop bits(1, 1.5 or 2)
+            if serial_port and serial_port.is_open:
+                serial_port.write(bytes(data, "utf-8"))
 
         # serial_port.close()  # essa funcao esta quebrando o app
-
-    # def teste(serial_port):
-    #     Clock.schedule_once(serial_port.write(b"1"), 1)
-    #     Clock.schedule_once(serial_port.write(b"0"), 1)
 
 
 class TestCamera(App):
