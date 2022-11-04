@@ -88,6 +88,29 @@ class CameraClick(BoxLayout):
 
         # pegando apenas a linha central da imagem
         height, width = ocvim.shape[:2]
+        start_row, start_col = 0, int(width * 0.5 - 50)
+        end_row, end_col = height, int(width * 0.5 + 50)
+        # faixa = ocvim[start_row:end_row, start_col:end_col]
+        # cv.imwrite("faixa.png", faixa)
+
+        DIVISOES = height / 3
+        end_h_1 = int(DIVISOES)
+        ped_1 = ocvim[start_row:end_h_1, start_col:end_col]
+        # cv.imwrite("pedaco_1.png", ped_1)
+
+        end_h_2 = int(2 * DIVISOES)
+        ped_2 = ocvim[end_h_1:end_h_2, start_col:end_col]
+        # cv.imwrite("pedaco_2.png", ped_2)
+
+        end_h_3 = int(3 * DIVISOES)
+        ped_3 = ocvim[end_h_2:end_h_3, start_col:end_col]
+        # cv.imwrite("pedaco_3.png", ped_3)
+
+        # DIVISOES = 3
+        # end_h_1 = int(height / DIVISOES)
+        # pedaco_1 = ocvim[start_row:end_row, end_h_1:2*end_h_1]
+        # # pedaco_1 = ocvim[end_h_1 : 2 * end_h_1, start_row:end_row]
+        # cv.imwrite("pedaco_1.png", pedaco_1)
 
         # start_row, start_col = int(height * 0.5 - 50), 0
         # end_row, end_col = int(height * 0.5 + 50), width
@@ -96,34 +119,34 @@ class CameraClick(BoxLayout):
         # DIVISOES = 3
         # end_w_1 = int(width / DIVISOES)
         # pedaco_1 = ocvim[start_row:end_row, 0:end_w_1]
-        start_row, start_col = int(height * 0.5 - 50), 0
-        end_row, end_col = int(height * 0.5 + 50), width
+        # start_row, start_col = int(height * 0.5 - 50), 0
+        # end_row, end_col = int(height * 0.5 + 50), width
         # cropped = ocvim[start_row:end_row, start_col:end_col]
         # cv.imwrite("inteira.png", ocvim)
 
         # dividir a imagem em 5 pedaços
-        end_wdh_1 = int(width / 3)
-        pedaco_1 = ocvim[start_row:end_row, 0:end_wdh_1]
-        # cv.imwrite("pedaco_1.png", pedaco_1)
+        # end_wdh_1 = int(width / 3)
+        # pedaco_1 = ocvim[start_row:end_row, 0:end_wdh_1]
+        # # cv.imwrite("pedaco_1.png", pedaco_1)
 
-        start_wdh_2 = end_wdh_1 + 1
-        end_wdh_2 = int(width * 2 / 3)
-        pedaco_2 = ocvim[start_row:end_row, start_wdh_2:end_wdh_2]
-        # cv.imwrite("pedaco_2.png", pedaco_2)
+        # start_wdh_2 = end_wdh_1 + 1
+        # end_wdh_2 = int(width * 2 / 3)
+        # pedaco_2 = ocvim[start_row:end_row, start_wdh_2:end_wdh_2]
+        # # cv.imwrite("pedaco_2.png", pedaco_2)
 
-        start_wdh_3 = end_wdh_2 + 1
-        pedaco_3 = ocvim[start_row:end_row, start_wdh_3:width]
+        # start_wdh_3 = end_wdh_2 + 1
+        # pedaco_3 = ocvim[start_row:end_row, start_wdh_3:width]
         # cv.imwrite("pedaco_3.png", pedaco_3)
 
         # verificando a media dos pixels da imagem
         # white = 1, black = 0
 
         LUMUS = 64
-        result_1 = 1 if int(np.mean(pedaco_1)) >= LUMUS else 0
-        result_2 = 1 if int(np.mean(pedaco_2)) >= LUMUS else 0
-        result_3 = 1 if int(np.mean(pedaco_3)) >= LUMUS else 0
+        result_1 = 1 if int(np.mean(ped_1)) >= LUMUS else 0
+        result_2 = 1 if int(np.mean(ped_2)) >= LUMUS else 0
+        result_3 = 1 if int(np.mean(ped_3)) >= LUMUS else 0
 
-        # return f"r1:{result_1}, r2: {result_2}, r3: {result_3}"
+        # # return f"r1:{result_1}, r2: {result_2}, r3: {result_3}"
         return f"{result_3}{result_2}{result_1}"
 
     def serialCommunication(self, data: str):
