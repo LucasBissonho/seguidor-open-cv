@@ -56,7 +56,7 @@ Builder.load_string(
 
 class CameraClick(BoxLayout):
     def pre_start(self):
-        Clock.schedule_interval(self.start, 0.05)
+        Clock.schedule_interval(self.start, 0.050)
 
     def start(self, dt):
         image = self.capture()
@@ -88,7 +88,7 @@ class CameraClick(BoxLayout):
         start_row, start_col = 0, int(width * 0.5 - 50)
         end_row, end_col = height, int(width * 0.5 + 50)
 
-        DIVISOES = height / 3
+        DIVISOES = height / 5
 
         end_h_1 = int(DIVISOES)
         ped_1 = ocvim[start_row:end_h_1, start_col:end_col]
@@ -102,6 +102,14 @@ class CameraClick(BoxLayout):
         ped_3 = ocvim[end_h_2:end_h_3, start_col:end_col]
         # cv.imwrite("pedaco_3.png", ped_3)
 
+        end_h_4 = int(4 * DIVISOES)
+        ped_4 = ocvim[end_h_3:end_h_4, start_col:end_col]
+        # cv.imwrite("pedaco_3.png", ped_3)
+
+        end_h_5 = int(5 * DIVISOES)
+        ped_5 = ocvim[end_h_4:end_h_5, start_col:end_col]
+        cv.imwrite("pedaco_3.png", ped_3)
+
         # print("ped_1", int(np.mean(ped_1)))
         # print("ped_2", int(np.mean(ped_2)))
         # print("ped_3", int(np.mean(ped_3)))
@@ -110,8 +118,10 @@ class CameraClick(BoxLayout):
         result_1 = 0 if int(np.mean(ped_1)) >= LUMUS else 1
         result_2 = 0 if int(np.mean(ped_2)) >= LUMUS else 1
         result_3 = 0 if int(np.mean(ped_3)) >= LUMUS else 1
+        result_4 = 0 if int(np.mean(ped_4)) >= LUMUS else 1
+        result_5 = 0 if int(np.mean(ped_5)) >= LUMUS else 1
 
-        return f"<{result_1}{result_2}{result_3}>"
+        return f"<{result_1}{result_2}{result_3}{result_4}{result_5}>"
 
     def serialCommunication(self, data: str):
         from usb4a import usb
