@@ -25,10 +25,6 @@ import cv2 as cv
 import numpy as np
 from PIL import Image
 
-from usb4a import usb
-from usbserial4a import serial4a
-
-
 Builder.load_string(
     """
 <CameraClick>:
@@ -60,7 +56,7 @@ Builder.load_string(
 
 class CameraClick(BoxLayout):
     def pre_start(self):
-        Clock.schedule_interval(self.start, 0.5)
+        Clock.schedule_interval(self.start, 0.05)
 
     def start(self, dt):
         image = self.capture()
@@ -84,16 +80,16 @@ class CameraClick(BoxLayout):
         # convertando para um formato usado pelo opencv
         npimg = np.array(image)
         # ocvim = cv.cvtColor(npimg, cv.COLOR_RGB2BGR)
-        ocvim = cv.cvtColor(npimg, cv.COLOR_BGR2GRAY)
+        gray_img = cv.cvtColor(npimg, cv.COLOR_BGR2GRAY)
+        (thresh, ocvim) = cv.threshold(gray_img, 127, 255, cv.THRESH_BINARY)
 
         # pegando apenas a linha central da imagem
         height, width = ocvim.shape[:2]
         start_row, start_col = 0, int(width * 0.5 - 50)
         end_row, end_col = height, int(width * 0.5 + 50)
-        # faixa = ocvim[start_row:end_row, start_col:end_col]
-        # cv.imwrite("faixa.png", faixa)
 
         DIVISOES = height / 3
+
         end_h_1 = int(DIVISOES)
         ped_1 = ocvim[start_row:end_h_1, start_col:end_col]
         # cv.imwrite("pedaco_1.png", ped_1)
@@ -106,50 +102,21 @@ class CameraClick(BoxLayout):
         ped_3 = ocvim[end_h_2:end_h_3, start_col:end_col]
         # cv.imwrite("pedaco_3.png", ped_3)
 
-        # DIVISOES = 3
-        # end_h_1 = int(height / DIVISOES)
-        # pedaco_1 = ocvim[start_row:end_row, end_h_1:2*end_h_1]
-        # # pedaco_1 = ocvim[end_h_1 : 2 * end_h_1, start_row:end_row]
-        # cv.imwrite("pedaco_1.png", pedaco_1)
+        # print("ped_1", int(np.mean(ped_1)))
+        # print("ped_2", int(np.mean(ped_2)))
+        # print("ped_3", int(np.mean(ped_3)))
 
-        # start_row, start_col = int(height * 0.5 - 50), 0
-        # end_row, end_col = int(height * 0.5 + 50), width
+        LUMUS = 128
+        result_1 = 0 if int(np.mean(ped_1)) >= LUMUS else 1
+        result_2 = 0 if int(np.mean(ped_2)) >= LUMUS else 1
+        result_3 = 0 if int(np.mean(ped_3)) >= LUMUS else 1
 
-        # dividir imagem em 3
-        # DIVISOES = 3
-        # end_w_1 = int(width / DIVISOES)
-        # pedaco_1 = ocvim[start_row:end_row, 0:end_w_1]
-        # start_row, start_col = int(height * 0.5 - 50), 0
-        # end_row, end_col = int(height * 0.5 + 50), width
-        # cropped = ocvim[start_row:end_row, start_col:end_col]
-        # cv.imwrite("inteira.png", ocvim)
-
-        # dividir a imagem em 5 pedaços
-        # end_wdh_1 = int(width / 3)
-        # pedaco_1 = ocvim[start_row:end_row, 0:end_wdh_1]
-        # # cv.imwrite("pedaco_1.png", pedaco_1)
-
-        # start_wdh_2 = end_wdh_1 + 1
-        # end_wdh_2 = int(width * 2 / 3)
-        # pedaco_2 = ocvim[start_row:end_row, start_wdh_2:end_wdh_2]
-        # # cv.imwrite("pedaco_2.png", pedaco_2)
-
-        # start_wdh_3 = end_wdh_2 + 1
-        # pedaco_3 = ocvim[start_row:end_row, start_wdh_3:width]
-        # cv.imwrite("pedaco_3.png", pedaco_3)
-
-        # verificando a media dos pixels da imagem
-        # white = 1, black = 0
-
-        LUMUS = 64
-        result_1 = 1 if int(np.mean(ped_1)) >= LUMUS else 0
-        result_2 = 1 if int(np.mean(ped_2)) >= LUMUS else 0
-        result_3 = 1 if int(np.mean(ped_3)) >= LUMUS else 0
-
-        # # return f"r1:{result_1}, r2: {result_2}, r3: {result_3}"
-        return f"{result_3}{result_2}{result_1}"
+        return f"<{result_1}{result_2}{result_3}>"
 
     def serialCommunication(self, data: str):
+        from usb4a import usb
+        from usbserial4a import serial4a
+
         # preparando para enviar dados pela serial
         usb_device_list = usb.get_usb_device_list()
         if usb_device_list:
@@ -162,8 +129,6 @@ class CameraClick(BoxLayout):
             )  # Number of stop bits(1, 1.5 or 2)
             if serial_port and serial_port.is_open:
                 serial_port.write(bytes(data, "utf-8"))
-
-        # serial_port.close()  # essa funcao esta quebrando o app
 
 
 class TestCamera(App):
