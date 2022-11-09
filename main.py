@@ -56,7 +56,7 @@ Builder.load_string(
 
 class CameraClick(BoxLayout):
     def pre_start(self):
-        Clock.schedule_interval(self.start, 0.050)
+        Clock.schedule_interval(self.start, 0.005)
 
     def start(self, dt):
         image = self.capture()
@@ -78,50 +78,39 @@ class CameraClick(BoxLayout):
         # convertendo buffer de bytes para imagem pil
 
         # convertando para um formato usado pelo opencv
-        npimg = np.array(image)
+        img = np.array(image)
         # ocvim = cv.cvtColor(npimg, cv.COLOR_RGB2BGR)
-        gray_img = cv.cvtColor(npimg, cv.COLOR_BGR2GRAY)
-        (thresh, ocvim) = cv.threshold(gray_img, 127, 255, cv.THRESH_BINARY)
+        img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        ret, img_bw = cv.threshold(img_gray, 32, 255, cv.THRESH_BINARY)
 
-        # pegando apenas a linha central da imagem
-        height, width = ocvim.shape[:2]
+        height, width = img_bw.shape[:2]
+
         start_row, start_col = 0, int(width * 0.5 - 50)
         end_row, end_col = height, int(width * 0.5 + 50)
 
-        DIVISOES = height / 5
+        img_to_slice = img_bw
 
-        end_h_1 = int(DIVISOES)
-        ped_1 = ocvim[start_row:end_h_1, start_col:end_col]
-        # cv.imwrite("pedaco_1.png", ped_1)
+        NUM_SLICES = 5
+        SLICES_SIZE = int(height / NUM_SLICES)
 
-        end_h_2 = int(2 * DIVISOES)
-        ped_2 = ocvim[end_h_1:end_h_2, start_col:end_col]
-        # cv.imwrite("pedaco_2.png", ped_2)
+        result_has_black = ""
 
-        end_h_3 = int(3 * DIVISOES)
-        ped_3 = ocvim[end_h_2:end_h_3, start_col:end_col]
-        # cv.imwrite("pedaco_3.png", ped_3)
+        for i in range(NUM_SLICES):
+            start_row = SLICES_SIZE * i
+            end_row = SLICES_SIZE * (i + 1)
 
-        end_h_4 = int(4 * DIVISOES)
-        ped_4 = ocvim[end_h_3:end_h_4, start_col:end_col]
-        # cv.imwrite("pedaco_3.png", ped_3)
+            slice = img_to_slice[start_row:end_row, start_col:end_col]
 
-        end_h_5 = int(5 * DIVISOES)
-        ped_5 = ocvim[end_h_4:end_h_5, start_col:end_col]
-        cv.imwrite("pedaco_3.png", ped_3)
+            # extract and count all pixels from slice image whose pixel value is 0
+            num_black_pixels = np.sum(slice == 0)
 
-        # print("ped_1", int(np.mean(ped_1)))
-        # print("ped_2", int(np.mean(ped_2)))
-        # print("ped_3", int(np.mean(ped_3)))
+            # print(f'slice{i+1}: {slice}')
 
-        LUMUS = 128
-        result_1 = 0 if int(np.mean(ped_1)) >= LUMUS else 1
-        result_2 = 0 if int(np.mean(ped_2)) >= LUMUS else 1
-        result_3 = 0 if int(np.mean(ped_3)) >= LUMUS else 1
-        result_4 = 0 if int(np.mean(ped_4)) >= LUMUS else 1
-        result_5 = 0 if int(np.mean(ped_5)) >= LUMUS else 1
+            has_black = "1" if num_black_pixels > 0 else "0"
 
-        return f"<{result_1}{result_2}{result_3}{result_4}{result_5}>"
+            result_has_black += has_black
+
+        return f"<{result_has_black}>"
 
     def serialCommunication(self, data: str):
         from usb4a import usb
